@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Reddit Image Posts</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{ --bg:#f6f7fb; --ink:#0f172a; --muted:#64748b; --card:#fff; --line:#e5e7eb; --accent:#2563eb; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--ink)}
+    header{padding:20px;background:linear-gradient(90deg,#0ea5e9,#2563eb);color:#fff}
+    .wrap{max-width:1200px;margin:0 auto;padding:20px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:16px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+    .imgwrap{aspect-ratio:4/3;background:#f1f5f9;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .imgwrap img{width:100%;height:100%;object-fit:cover}
+    .content{padding:12px 12px 14px}
+    .title{font-weight:700;font-size:15px;line-height:1.35;margin:0 0 8px}
+    .muted{color:var(--muted);font-size:13px}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    /* Two columns: subreddit | pages + button */
+    .formgrid{display:grid;grid-template-columns:1fr 320px;gap:12px;align-items:end}
+    @media (max-width: 700px){ .formgrid{grid-template-columns:1fr} }
+    .field{display:flex;flex-direction:column}
+    .label{font-weight:600;font-size:13px;margin:0 0 6px;color:#e2e8f0}
+    .help{color:#dbeafe;font-size:12px;margin-top:6px}
+    input, button{padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit}
+    button{background:#fff;cursor:pointer}
+    .primary{background:#fff;color:#0f172a;border-color:#dbeafe}
+    a.primary{display:inline-block;text-decoration:none;padding:10px 12px;border:1px solid #dbeafe;border-radius:10px;background:#fff;color:#0f172a}
+    .search{width:100%}
+    .sub{min-width:220px}
+    .pages{width:100px}
+    .tip{color:#dbeafe;font-size:12px;margin-top:4px}
+    .inline{display:flex;gap:8px;align-items:center}
+
+    /* --- UI polish overrides --- */
+    .wrap{max-width:1200px;margin:0 auto;padding:0 20px}
+    header{padding:20px 0;background:linear-gradient(90deg,#0ea5e9,#2563eb)}
+    .controls a, .controls button{border-radius:10px}
+    .primary{border-color:#c7d2fe}
+    .controls a.primary{background:#fff;color:#0b3fa8}
+    .tip{color:#e2e8f0}
+    .grid{gap:18px;margin:20px 0}
+    .card{box-shadow:0 6px 18px rgba(2,6,23,.08);transition:box-shadow .15s ease,transform .15s ease}
+    .card:hover{box-shadow:0 12px 28px rgba(2,6,23,.12);transform:translateY(-2px)}
+    /* Make the small link in header look like a button */
+    header a{color:#eef2ff}
+    header a[href="/list"]{display:inline-block;border:1px solid rgba(255,255,255,.35);padding:6px 10px;border-radius:10px;text-decoration:none}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1 style="margin:0">Reddit Image Posts</h1>
+      <div>Showing latest: <strong>{{ filename }}</strong></div>
+      <!-- right under the "Showing latest: ..." line -->
+      <div>
+      <a href="/list" style="color:#dbeafe;text-decoration:underline;">List View</a>
+      </div>
+      <!-- SCRAPE FORM -->
+      <div class="tip" style="margin-top:8px">Enter a subreddit and how many pages to fetch. One page is about 25 posts.</div>
+      <form action="/scrape" method="post">
+        <div class="formgrid">
+          <label class="field">
+            <span class="label">Subreddit</span>
+            <input class="sub" type="text" name="subreddit" placeholder="e.g. malaysia (without r/)" required aria-label="Subreddit" />
+            <small class="help">Examples: malaysia, pics, earthporn. Do not include r/.</small>
+          </label>
+          <label class="field">
+            <span class="label">Pages to fetch</span>
+            <div class="inline">
+              <input class="pages" type="number" name="pages" min="1" max="50" value="3" aria-label="Pages to fetch" />
+              <button class="primary" type="submit">Scrape</button>
+            </div>
+            <small class="help">Range 1-50. Larger values take longer.</small>
+          </label>
+        </div>
+        <div class="tip">Scraping runs in the background; refresh to see the newest file load.</div>
+      </form>
+
+      <!-- CLIENT-SIDE FILTER FOR VISIBLE CARDS -->
+      <div class="controls">
+        <input id="search" class="search" type="search" placeholder="Filter visible cards by title or author" />
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    {% if posts and posts|length > 0 %}
+      <div id="grid" class="grid">
+        {% for post in posts %}
+        <article class="card" data-title="{{ post.title|e }}" data-author="{{ post.author|e }}">
+          <a class="imgwrap" href="{{ post.post_url }}" target="_blank" rel="noopener">
+            <img src="{{ post.image_url }}" loading="lazy" alt="{{ post.title|e }}" />
+          </a>
+          <div class="content">
+            <p class="title"><a href="{{ post.post_url }}" target="_blank" rel="noopener">{{ post.title }}</a></p>
+            <div class="muted">u/{{ post.author }} Â· â–² {{ post.score }} Â· {{ post.num_comments }} comments</div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="padding:24px;background:#fff;border:1px dashed var(--line);border-radius:12px;color:var(--muted)">
+        No posts found. Use the form above to scrape a subreddit.
+      </div>
+    {% endif %}
+  </main>
+
+  <script>
+    // Simple client-side filter for the already-rendered cards
+    const q = document.getElementById('search');
+    const cards = () => Array.from(document.querySelectorAll('.card'));
+    q.addEventListener('input', () => {
+      const needle = q.value.trim().toLowerCase();
+      cards().forEach(c => {
+        const hay = (c.dataset.title + ' ' + c.dataset.author).toLowerCase();
+        c.style.display = hay.includes(needle) ? '' : 'none';
+      });
+    });
+
+    // UI text cleanups for better look/encoding safety
+    try {
+      if (q) q.setAttribute('placeholder','Filter visible cards by title or author');
+      document.querySelectorAll('.card .muted').forEach(el => {
+        el.textContent = el.textContent
+          .replace(/ \uFFFD-\uFFFD /g, ' â–² ')
+          .replace(/ A\uFFFD /g, ' Â· ')
+          .replace(/\s{2,}/g,' ')
+          .trim();
+      });
+    } catch (_) {}
+  </script>
+</body>
+</html>
