@@ -19,6 +19,8 @@ Follow the steps in order. When you see text inside a gray box, it is a command 
 - To copy from this document: place your cursor at the start of the command, hold the left mouse button, drag to the end, release, and press `Ctrl + C`.
 - To paste into Command Prompt: click inside the Command Prompt window and either right-click the mouse or press `Ctrl + V`, then press `Enter`.
 
+**Before you continue, turn on your Wi-Fi or wired internet connection. Python updates and dependency installs need an active connection.**
+
 ### 1. Install Python (one time only)
 1. Open your browser and go to https://www.python.org/downloads/windows/
 2. Click the latest Python 3 release (version 3.10 or newer) and download the 64-bit installer.
@@ -206,3 +208,4 @@ PY
 ## License
 
 MIT
+
